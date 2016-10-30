@@ -1,0 +1,33 @@
+{
+  "name": "spider-time3net",
+  "version": "1.0.0",
+  "description": "Spider for timetimetime.net.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/afeiship/spider-time3net.git"
+  },
+  "keywords": [
+    "spider",
+    "time3net"
+  ],
+  "author": "afei",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/afeiship/spider-time3net/issues"
+  },
+  "homepage": "https://github.com/afeiship/spider-time3net#readme",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "co": "^4.6.0",
+    "co-queue": "^2.0.0",
+    "co-request": "^1.0.0",
+    "co-wait": "0.0.0",
+    "json-init": "afeiship/json-init",
+    "next-js-core2": "afeiship/next-js-core2",
+    "root-path": "afeiship/root-path"
+  }
+}

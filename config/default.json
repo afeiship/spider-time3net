@@ -1,0 +1,15 @@
+{
+  "url": {
+    "root": "http://www.timetimetime.net",
+    "category": "http://www.timetimetime.net/catalog.asp?cate={0}",
+    "page":"http://www.timetimetime.net/catalog.asp?cate={0}&page={1}"
+  },
+  "category":{
+    "startIndex":1,
+    "endIndex":100,
+    "items":[]
+  },
+  "page":{
+    "currentIndex":0
+  }
+}
