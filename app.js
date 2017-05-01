@@ -18,8 +18,7 @@ async function getArticle(inId) {
   const $ = await load(`http://www.timetimetime.net/${inId}.html`);
   return {
     id:inId,
-    title:$('.indexbox_l h1').text(),
-    content:$('.indexbox_l .neir.a2').text()
+    title:$('.indexbox_l h1').html(),
   };
 };
 
@@ -91,8 +90,12 @@ async function getArticle(inId) {
 
 
   //start collector:
-  const app = new App();
-  await app.init();
+  // const app = new App();
+  // await app.init();
+
+
+  const res = await getArticle(1);
+  console.log(res);
 
 
 
