@@ -2,66 +2,10 @@ import {rimrafSync,mkdirpSync} from 'async-file-utils';
 import {load} from 'async-spider-utils';
 import {asyncEach,asyncFor,asyncMap} from 'async-array-utils';
 import fs from 'fs';
-
 import config from './modules/config';
 
-async function getLinks(inUrl) {
-  return new Promise((resolve, reject) => {
-    request(inUrl,(err,response,body)=>{
-      if(!err){
-        const $ = cheerio.load(body);
-        let links = [];
-        $('.indexbox_l .title>a').each((index,item)=>{
-          links.push( $(item).attr('href') );
-        });
-        resolve(links);
-      }else{
-        reject(err);
-      }
-    });
-  });
-};
 
-
-(async ()=>{
-
-  // const data = config.get('data');
-  const categories = [
-    'yuedu',
-    'yulu',
-    'renwu',
-    'meiwen',
-    'yuanchuang',
-    'haoshu',
-    'sanwen',
-    'gushi',
-    'lingyimian',
-    'shenghuo',
-    'zasui'
-  ];
-
-  class Category{
-    constructor(inCate){
-      this._cate = inCate;
-    }
-
-    async total (){
-      const $ = await load(`http://www.timetimetime.net/cate-${this._cate}.html`);
-      const url = $('.indexbox_l .page a').last().attr('href');
-      return parseInt(url.split('_')[1]);
-    }
-  }
-
-
-
-
-  // const app = new Category('yulu');
-
-  // await asyncEach(categories,(item,index)=>{
-  //   let html = await load()
-  // })
-
-
+//helpers:
 function createFromRange(inStart, inEnd){
   let result = [];
   for(let i = inStart; i<= inEnd; i++){
@@ -70,36 +14,85 @@ function createFromRange(inStart, inEnd){
   return result;
 }
 
-
-
-for (let cate of categories){
-  const app = new Category(cate);
-  const task = config.get('task') || {
-    current:1,
-    total: await app.total(),
-    slug: cate
+async function getArticle(inId) {
+  const $ = await load(`http://www.timetimetime.net/${inId}.html`);
+  return {
+    id:inId,
+    title:$('.indexbox_l h1').text(),
+    content:$('.indexbox_l .neir.a2').text()
   };
-
-  const {current,total} = task;
-
-  const arr = createFromRange(current,total);
-
-  // console.log(arr);
+};
 
 
+(async ()=>{
+  const PER_PAGE = 16;
+  const categories = [
+    'zasui',
+    'shenghuo',
+    // 'yuedu',
+    // 'yulu',
+    // 'renwu',
+    // 'meiwen',
+    // 'yuanchuang',
+    // 'haoshu',
+    // 'sanwen',
+    // 'gushi',
+    // 'lingyimian'
+  ];
 
-  for(let item of arr){
-    const filename = `./data/${cate}/${item}`;
-    const page = `http://www.timetimetime.net/cate-${cate}_${item}.html`;
-    const $page = await load(page);
-    if(!fs.existsSync(filename)){
-      mkdirpSync(filename);
+  class App{
+    async init(){
+      this._cateIndex = config.get('cateIndex') || 0;
+      this._cate = categories[ this._cateIndex ];
+      this._data = config.get(this._cate) || [];
+      if(this._cateIndex < categories.length){
+        await this.start();
+      }else{
+        console.log('Has Finish!');
+        config.set('cateIndex',0);
+        config.save();
+      }
     }
-    // console.log(filename);
+
+
+    async saveArticles(inCurrent,inIds){
+      for(let id of inIds){
+        const article = await getArticle(id);
+        fs.writeFileSync(`./data/${this._cate}/${inCurrent}/${id}.json`, JSON.stringify(article,null,2) );
+      }
+    }
+
+    async start(){
+      const pages =  this._data;
+      const current = pages.length + 1;
+      console.log('current page is :=>',this._cate,current);
+      const $ = await load(`http://www.timetimetime.net/cate-${this._cate}_${current}.html`);
+      const ids = Array.from($('.indexbox_l .title>a')).map((item)=>{
+        return parseInt( $(item).attr('href').split('/').pop() );
+      });
+
+      mkdirpSync(`./data/${this._cate}/${current}`);
+      await this.saveArticles(current,ids);
+
+      pages.push(ids);
+      config.set(this._cate,pages);
+
+      //The last page:
+      if(ids.length!= PER_PAGE){
+        console.log('update cate index?');
+        this._cateIndex++ ;
+        config.set('cateIndex',this._cateIndex);
+      }
+
+      config.save();
+      await this.init();
+    }
   }
 
 
-}
+  //start collector:
+  const app = new App();
+  await app.init();
 
 
 
